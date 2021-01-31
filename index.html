@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Pac-Man</title>
+	<style>
+		body {
+			margin: 0;
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<canvas class="myCanvas">
+		<p>Your Browser does not support this canvas. Sorry!</p>
+	</canvas>
+
+	<p>You have encounter error. Hah.</p>
+
+	<script>
+		//Declerations******************************************************************************************
+      var canvas = document.querySelector('.myCanvas'); //Constant for JS
+      var width = canvas.width = window.innerWidth;     //Cosntant for JS
+      var height = canvas.height = window.innerHeight;  //Constant for JS
+      var ctx = canvas.getContext('2d');                //Cosntant for JS
+      var pacenter_x = width/2;                        ///Center of Pac-Man
+      var pacenter_y = height/3;                       ///height at witch Pac Man displays
+      var x = 1;                                        //Ammount mouth opens or closes
+      var speed = 0;                                    //Speed at which Pac man moves
+      var isOpen = true;                                //Checks if the mouth is opening
+      var dotnum = 0;                                   //Number of dots after "Loading"
+      var direction = {
+        Left : true,
+        Right : false,
+        Up : false,
+        Down : false
+      }
+
+      function screen(){
+        if (width !== window.innerWidth){width = canvas.width = window.innerWidth;}
+        if (height !== window.innerHeight){height = canvas.height = window.innerHeight;}
+      }
+
+      function sleep(milliseconds) {                    //For testing purposes
+          var start = new Date().getTime();
+          for (var i = 0; i < 1e7; i++) {
+            if ((new Date().getTime() - start) > milliseconds){
+              break;
+            }
+          }
+      }
+
+      function degToRad(degrees) {                     //Makes working with circles easier
+        return degrees * Math.PI / 180;
+      };
+        //Reads User input**********************************************************************************
+        let keysDown = {};
+        addEventListener("keydown", function(event){
+          keysDown[event.keyCode] = true;
+        });
+        addEventListener("keyup", function(event){
+          delete keysDown[event.keyCode];
+        });
+        
+        function input(){ 
+          if(69 in keysDown){ //Increases speed when E is pressed
+            speed+=0.5;
+            }
+          if(81 in keysDown){ //Decreases speed when Q is pressed 
+            speed-=0.5;
+          }
+          if(82 in keysDown){ //Resets when  R is pressed
+            speed=0;
+            pacenter_x = width/2;
+          }
+          if(68 in keysDown){ // Goes right when D is pressed
+            direction.Left = true;
+            direction.Right = false; //Important note: I did a big stupid with the names. When left is true, it goes right and vice versa. 
+            direction.Up = false;
+            direction.Down = false;
+            x = 45;
+          }
+          if (65 in keysDown){ //Goes left when A is pressed
+            direction.Left = false;
+            direction.Right = true;
+            direction.Up = false;
+            direction.Down = false;
+            x = 135;
+          }
+          if (87 in keysDown){ //Goes up when W is pressed
+            direction.Left = false
+            direction.Right = false;
+            direction.Up = true;
+            direction.Down = false;
+            x = 45;
+          }
+          if (83 in keysDown){ //Goes down when S is pressed
+            direction.Left = false;
+            direction.Right = false;
+            direction.Up = false;
+            direction.Down = true;
+            x = 45;
+          }
+        } //End input Function
+      //Graphics********************************************************************************************
+     function draw() {
+        //Background & Borders
+        ctx.fillRect(0,0,width,height);
+        ctx.strokeStyle = 'rgba(0,0,255,10)';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(4,4,width-10,height-10);
+
+        //Loading text
+        ctx.fillStyle = 'white';
+        ctx.font = '48px georgia';
+
+        ctx.fillText("Speed: " + speed, (width/2)-50, 50);
+        if (speed <= 0){
+          speed = 0;
+          pacenter_x = width/2;
+          pacenter_y = height/3;
+          ctx.font = '24px georgia';
+          ctx.fillText('Use WASD to move.', width/2, (height*0.75)+25);
+          ctx.fillText('Use E to increase speed and Q to decresase it. ', width/2, (height*0.75)+50);
+          ctx.fillText('Speed cannot be below zero.', width/2, (height*0.75)+75);
+          ctx.fillText('Press R to reset all values.',width/2, (height*0.75)+100);
+          direction.Left = true;
+          direction.Right = false;
+          direction.Up = false;
+          direction.Down = false;
+          x = 1;
+        }
+
+        //Mouth Movement
+        function mouthleft(){ //Moves mouth up and down
+          ctx.arc(pacenter_x,pacenter_y,50,degToRad(-x),degToRad(x),true);
+          ctx.lineTo(pacenter_x,pacenter_y);
+        }
+        function mouthright(){
+          ctx.arc(pacenter_x,pacenter_y,50,degToRad(x),degToRad(-x),true);
+          ctx.lineTo(pacenter_x,pacenter_y);
+        }
+        function mouthup(){
+          ctx.arc(pacenter_x,pacenter_y,50,degToRad(-90-x),degToRad(-90+x),true);
+          ctx.lineTo(pacenter_x,pacenter_y)
+        }
+        function mouthdown(){
+          ctx.arc(pacenter_x,pacenter_y,50,degToRad(90-x),degToRad(90+x),true);
+          ctx.lineTo(pacenter_x,pacenter_y);
+        }
+
+        if (direction.Left){
+          ctx.beginPath();
+          ctx.fillStyle = 'rgb(255,255,0)';
+          if (isOpen){
+            mouthleft();
+            x-=speed;
+            if (x <= 1){ isOpen = false; x = 1; }
+          } else { 
+            mouthleft();
+            x += speed;
+            if (x >= 45){ isOpen = true; x = 45;}
+          }
+        }
+
+      if (direction.Right){ 
+        ctx.beginPath();
+        ctx.fillStyle = 'rgb(255,255,0)';
+        if (isOpen){
+          mouthright();
+          x+=speed;
+          if (x >= 179){ isOpen = false; x = 179; }
+        } else { 
+          mouthright();
+          x -= speed;
+          if (x <= 135){ isOpen = true; x = 135;}
+        }
+      }
+      if (direction.Up){
+        ctx.beginPath();
+        ctx.fillStyle = 'rgb(255,255,0)';
+        if (isOpen){
+          mouthup();
+          x -= speed;
+          if (x <= 1){ isOpen = false; x = 1; }
+        } else { 
+          mouthup();
+          x += speed;
+          if (x >= 45){ isOpen = true; x = 45;}
+        }        
+      }
+      if (direction.Down){
+        ctx.beginPath();
+        ctx.fillStyle = 'rgb(255,255,0)';
+        if (isOpen){
+          mouthdown();
+          x +=speed;
+          if (x >= 45){ isOpen = false; x = 45; }
+        } else { 
+          mouthdown();
+          x -= speed;
+          if (x <= 1){ isOpen = true; x = 1; }
+        }        
+      }
+
+       ctx.fill(); 
+       ctx.fillStyle = 'rgb(0,0,0)';//I don't know how or why but this controls the background
+       if (direction.Left){ 
+        if (pacenter_x-300 > width){ pacenter_x = -300;}
+       pacenter_x = pacenter_x + speed;
+       }
+       if (direction.Right){
+         if (pacenter_x+300 < 0){ pacenter_x = width+300;}
+       pacenter_x = pacenter_x - speed;
+       }
+       if (direction.Up){
+         if (pacenter_y+300 < 0){ pacenter_y = height + 300;}
+       pacenter_y = pacenter_y - speed; 
+       }
+       if (direction.Down){
+         if (pacenter_y-300 > height){ pacenter_y = -300;}
+       pacenter_y = pacenter_y + speed; 
+       }      
+  } //End Draw Function
+
+function main() { //Executable******************************************************************************
+  //Practically useless
+  screen();
+  // Check for Input
+  input();
+  // Draw Stuff
+  draw();
+  // Allow HTML to render stuff + loop main function
+  requestAnimationFrame(main);
+}
+
+main();
+
+	</script>
+</body>
+
+</html>
